@@ -1,0 +1,420 @@
+---
+- hosts: php-dev
+  become: yes
+
+  tasks:
+    - name: Update pacman (pacman -Syu)
+      community.general.pacman:
+        update_cache: yes
+        upgrade: yes
+
+    - name: Install vim
+      package:
+        name: vim
+        state: present
+
+    - name: Install tmux
+      package:
+        name: tmux
+        state: present
+
+    - name: Install base-devel
+      package:
+        name: base-devel
+        state: present
+
+    - name: Create the `aur_builder` user
+      ansible.builtin.user:
+        name: aur_builder
+        create_home: yes
+        group: wheel
+
+    - name: Allow the `aur_builder` user to run `sudo pacman` without a password
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/aur_builder-allow-to-sudo-pacman
+        state: present
+        line: 'aur_builder ALL=(ALL) NOPASSWD: /usr/bin/pacman'
+        create: yes
+        validate: 'visudo -cf %s'
+
+
+    - name: Install git
+      package:
+        name: git
+        state: present
+
+    - name: Install go
+      package:
+        name: go
+        state: present
+
+    - name: Install yay AUR Helper
+      become: false
+      ansible.builtin.shell:
+        cmd: git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si --noconfirm
+        creates: /usr/bin/yay
+
+    - name: Install Arandr display manager
+      package:
+        name: arandr
+        state: present
+
+    - name: Install bat replacement of cat
+      package:
+        name: bat
+        state: present
+
+    - name: Install fd replacement of find
+      package:
+        name: fd
+        state: present
+
+    - name: Install procs
+      package:
+        name: procs
+        state: present
+
+    - name: Install dust
+      package:
+        name: dust
+        state: present
+
+    - name: Install starship shell
+      package:
+        name: starship
+        state: present
+
+    - name: Install exa
+      package:
+        name: exa
+        state: present
+
+    - name: Install ripgrep
+      package:
+        name: ripgrep
+        state: present
+
+    - name: Instal tldr
+      package:
+        name: tealdeer
+        state: present
+
+    - name: Install bandwhich
+      package:
+        name: bandwhich
+        state: present
+
+    - name: Install zoxide
+      package:
+        name: zoxide
+        state: present
+
+    - name: Install emacs
+      package:
+        name: emacs
+        state: present
+
+    - name: Install tree
+      package:
+        name: tree
+        state: present
+
+    - name: Install expect for unbuffer
+      package:
+        name: expect
+        state: present
+
+    - name: Install pip3
+      package:
+        name: python-pip
+        state: present
+
+    - name: Install nvim
+      package:
+        name: neovim
+        state: present
+
+    - name: Install npm
+      package:
+        name: npm
+        state: present
+
+    - name: Install neofetch
+      package:
+        name: neofetch
+        state: present
+
+    - name: Install zsh
+      package:
+        name: zsh
+        state: present
+
+    - name: Install wget
+      package:
+        name: wget
+        state: present
+
+    - name: Create the `chrifl` user
+      ansible.builtin.user:
+        name: chrifl
+        password: "{{ 'chrifl' | password_hash('sha512', 'mysecretsalt') }}"
+        shell: /usr/bin/zsh
+
+    - name: Allow the `chrifl` user to run sudo without a password
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/chrifl-allow-to-sudo-without-password
+        state: present
+        line: 'chrifl ALL=(ALL) NOPASSWD:ALL'
+        create: yes
+        validate: 'visudo -cf %s'
+
+    - name: Set keyboardlayout to `de`
+      ansible.builtin.shell:
+        cmd: "localectl --no-convert set-x11-keymap de"
+
+    - name: Remove virtualbox nox-guest packages (utils)
+      package:
+        name: virtualbox-guest-utils-nox
+        state: absent
+
+    - name: Install htop
+      package:
+        name: htop
+        state: present
+
+    - name: Install dmenu
+      package:
+        name: dmenu
+        state: present
+
+    - name: Install feh
+      package:
+        name: feh
+        state: present
+
+    - name: Install conky
+      package:
+        name: conky
+        state: present
+
+- hosts: php-dev
+  become: yes
+  become_user: aur_builder
+
+  tasks:
+    - name: Install Chrome-dev
+      kewlfft.aur.aur:
+        use: yay
+        name: google-chrome-dev
+        state: present
+
+    - name: Install wezterm
+      kewlfft.aur.aur:
+        use: yay
+        name: wezterm-nightly-bin
+        state: present
+
+    - name: Install FiraCode NerdFont
+      kewlfft.aur.aur:
+        use: yay
+        name: nerd-fonts-fira-code
+        state: present
+
+    - name: Install delta
+      kewlfft.aur.aur:
+        use: yay
+        name: git-delta
+        state: present
+
+    - name: Install wormhole
+      kewlfft.aur.aur:
+        use: yay
+        name: magic-wormhole
+        state: present
+
+    - name: Install fzf
+      kewlfft.aur.aur:
+        use: yay
+        name: fzf
+        state: present
+
+    - name: Install ag
+      kewlfft.aur.aur:
+        use: yay
+        name: the_silver_searcher
+        state: present
+
+    - name: Install hstr
+      kewlfft.aur.aur:
+        use: yay
+        name: hstr
+        state: present
+
+    - name: Install gnu stow for dotfile management
+      kewlfft.aur.aur:
+        use: yay
+        name: stow
+        state: present
+
+    - name: Install onefetch
+      kewlfft.aur.aur:
+        use: yay
+        name: onefetch
+        state: present
+
+    - name: Install virtualbox guest packages (utils)
+      kewlfft.aur.aur:
+        use: yay
+        name: virtualbox-guest-utils
+        state: present
+
+    - name: Install virtualbox guest packages (dkms-vmsvga)
+      kewlfft.aur.aur:
+        use: yay
+        name: virtualbox-guest-dkms-vmsvga
+        state: present
+
+    - name: Install xorg-server
+      kewlfft.aur.aur:
+        use: yay
+        name: xorg-server
+        state: present
+
+    - name: Install xorg-xinit
+      kewlfft.aur.aur:
+        use: yay
+        name: xorg-xinit
+        state: present
+
+    - name: Install leftwm
+      kewlfft.aur.aur:
+        use: yay
+        name: leftwm
+        state: present
+
+    - name: Install leftwm coffee rquirement polybar
+      kewlfft.aur.aur:
+        use: yay
+        name: polybar
+        state: present
+
+    - name: Install leftwm coffee rquirement compton
+      kewlfft.aur.aur:
+        use: yay
+        name: compton
+        state: present
+
+    - name: Install leftwm coffee rquirement xwinwrap
+      kewlfft.aur.aur:
+        use: yay
+        name: xwinwrap
+        state: present
+
+    - name: Install leftwm coffee rquirement mpv
+      kewlfft.aur.aur:
+        use: yay
+        name: mpv
+        state: present
+
+    - name: Install lightdm
+      kewlfft.aur.aur:
+        use: yay
+        name: lightdm
+        state: present
+
+    - name: Install lightdm greeter
+      kewlfft.aur.aur:
+        use: yay
+        name: lightdm-gtk-greeter
+        state: present
+
+          #- name: Setup lightdm greeter
+          #ansible.builtin.lineinfile:
+          #path: /etc/lightdm/lightdm.conf
+          #state: present
+          #regexp: '^#greeter-session=example-gtk-gnome'
+          #line: 'greeter-session=lightdm-gtk-greeter'
+          #validate: /usr/sbin/visudo -cf %s
+
+    - name: Enable lightdm service
+      ansible.builtin.systemd:
+        name: lightdm
+        enabled: true
+        masked: no
+
+- hosts: php-dev
+  become: yes
+  become_user: chrifl
+
+  tasks:
+
+    - name: Install Spacevim
+      ansible.builtin.shell:
+        cmd: curl -sLf https://spacevim.org/install.sh | bash
+        creates: "{{ lookup('env', 'HOME') }}/.SpaceVim"
+
+    - name: Download oh-my-zsh install script
+      ansible.builtin.shell:
+        cmd: "wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O {{ lookup('env', 'HOME') }}/install.sh"
+        creates: "{{ lookup('env', 'HOME') }}/install.sh"
+
+    - name: Install oh-my-zsh
+      ansible.builtin.shell:
+        cmd: "sh {{ lookup('env', 'HOME') }}/install.sh --unattended --keep-zshrc"
+        creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+
+    - name: Install zsh-autosuggestions plugin
+      ansible.builtin.shell:
+        cmd: git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+        creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+
+    - name: Install zsh-syntax-highlighting plugin
+      ansible.builtin.shell:
+        cmd: git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+        creates: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+
+    - name: Install tpm tmux plugin manager
+      ansible.builtin.shell:
+        cmd: git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+        creates: "{{ lookup('env', 'HOME') }}/.tmux/plugins/tpm"
+
+    - name: Install Spacemacs
+      ansible.builtin.shell:
+        cmd: git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d
+        creates: "{{ lookup('env', 'HOME') }}/.emacs.d"
+
+    - name: Check if .zshrc is symlink
+      stat:
+        path: "{{ lookup('env', 'HOME') }}/.zshrc"
+      register: zshrc_file
+
+    - name: Remove old and wrong dotfiles
+      ansible.builtin.file:
+        path:
+          - "{{ lookup('env', 'HOME') }}/.zshrc"
+        state: absent
+        # Only do this, when we didn't already provision our dotfiles
+      when: not zshrc_file.stat.islnk
+
+    - name: Clone personal dotfiles
+      ansible.builtin.shell:
+        cmd: git clone git@github.com/MyonNeutrino/dev-dotfiles.git ~/.dotfiles
+        creates: "{{ lookup('env', 'HOME') }}/.dotfiles"
+
+    - name: provision dotfiles with gnu stow
+      ansible.builtin.shell:
+        chdir: "{{ lookup('env', 'HOME') }}/.dotfiles"
+        cmd: 'stow */'
+        creates: "{{ lookup('env', 'HOME') }}/.zshrc"
+
+    - name: Get leftwm Coffee theme
+      ansible.builtin.shell:
+        cmd: "git clone https://github.com/lex148/leftwm-coffee.git {{ lookup('env', 'HOME') }}/.config/leftwm/themes/leftwm-coffee"
+        creates: "{{ lookup('env', 'HOME') }}/.config/leftwm/themes/leftwm-coffee"
+
+    - name: Links leftwm Coffee theme as current
+      ansible.builtin.file:
+        src: "{{ lookup('env', 'HOME') }}/.config/leftwm/themes/leftwm-coffee"
+        dest: "{{ lookup('env', 'HOME') }}/.config/leftwm/themes/current"
+        state: link
+
