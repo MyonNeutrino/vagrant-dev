@@ -11,9 +11,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provider "virtualbox" do |vb|
     # Customize the amount of memory on the VM:
-    vb.memory = "4096"
+    vb.memory = "6144" # 4096 + 2048 = 6144
     #vb.customize ["modifyvm", :id, "--monitorcount", "2"]
     vb.customize ["modifyvm", :id, "--vram", "256"]
+    vb.customize ["modifyvm", :id, "--accelerate3d", "on"]
     vb.gui = true
   end
 

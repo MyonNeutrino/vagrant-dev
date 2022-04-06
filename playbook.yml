@@ -328,19 +328,42 @@
         name: lightdm-gtk-greeter
         state: present
 
-          #- name: Setup lightdm greeter
-          #ansible.builtin.lineinfile:
-          #path: /etc/lightdm/lightdm.conf
-          #state: present
-          #regexp: '^#greeter-session=example-gtk-gnome'
-          #line: 'greeter-session=lightdm-gtk-greeter'
-          #validate: /usr/sbin/visudo -cf %s
-
     - name: Enable lightdm service
+      become: yes
       ansible.builtin.systemd:
         name: lightdm
         enabled: true
         masked: no
+
+    - name: Install phpStorm
+      kewlfft.aur.aur:
+        use: yay
+        name: phpstorm
+        state: present
+
+    - name: Install phpstorm JRE
+      kewlfft.aur.aur:
+        use: yay
+        name: phpstorm-jre
+        state: present
+
+    - name: Install phpstorm url handler
+      kewlfft.aur.aur:
+        use: yay
+        name: phpstorm-url-handler
+        state: present
+
+    - name: Install docker
+      kewlfft.aur.aur:
+        use: yay
+        name: docker
+        state: present
+
+    - name: Install docker-compose
+      kewlfft.aur.aur:
+        use: yay
+        name: docker-compose
+        state: present
 
 - hosts: php-dev
   become: yes
@@ -417,4 +440,9 @@
         src: "{{ lookup('env', 'HOME') }}/.config/leftwm/themes/leftwm-coffee"
         dest: "{{ lookup('env', 'HOME') }}/.config/leftwm/themes/current"
         state: link
+
+    - name: Get docker proxy stack
+      ansible.builtin.shell:
+        cmd: "git clone https://github.com/Sengorius/docker-proxy-stack ~/Dokumente/docker-proxy-stack"
+        creates: "{{ lookup('env', 'HOME') }}/Dokumente/docker-proxy-stack"
 
