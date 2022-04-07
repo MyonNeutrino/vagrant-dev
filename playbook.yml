@@ -1,5 +1,5 @@
 ---
-- hosts: php-dev
+- hosts: anki-dev
   become: yes
 
   tasks:
@@ -157,6 +157,7 @@
     - name: Create the `chrifl` user
       ansible.builtin.user:
         name: chrifl
+        uid: 1002
         password: "{{ 'chrifl' | password_hash('sha512', 'mysecretsalt') }}"
         shell: /usr/bin/zsh
 
@@ -197,7 +198,7 @@
         name: conky
         state: present
 
-- hosts: php-dev
+- hosts: anki-dev
   become: yes
   become_user: aur_builder
 
@@ -329,47 +330,53 @@
         state: present
 
     - name: Enable lightdm service
-      become: yes
+      become: true
+      ignore_errors: yes
       ansible.builtin.systemd:
-        name: lightdm
+        name: lightdm.service
         enabled: true
         masked: no
 
-    - name: Install phpStorm
+    - name: Install anki
       kewlfft.aur.aur:
         use: yay
-        name: phpstorm
+        name: anki-official-binary-bundle
         state: present
 
-    - name: Install phpstorm JRE
+    - name: Install jre for miktex
       kewlfft.aur.aur:
         use: yay
-        name: phpstorm-jre
+        name: jre-openjdk
         state: present
 
-    - name: Install phpstorm url handler
+    - name: Install miktex
       kewlfft.aur.aur:
         use: yay
-        name: phpstorm-url-handler
+        name: miktex
         state: present
 
-    - name: Install docker
-      kewlfft.aur.aur:
-        use: yay
-        name: docker
-        state: present
-
-    - name: Install docker-compose
-      kewlfft.aur.aur:
-        use: yay
-        name: docker-compose
-        state: present
-
-- hosts: php-dev
+- hosts: anki-dev
   become: yes
   become_user: chrifl
 
   tasks:
+
+    - name: Change ownership of /home/chrifl
+      become: yes
+      become_user: root
+      ansible.builtin.file:
+        path: /home/chrifl
+        owner: chrifl
+        group: chrifl
+
+    - name: Setup miktex for user
+      ansible.builtin.shell:
+        cmd: /opt/miktex/bin/miktexsetup finish
+        creates: "{{ lookup('env', 'HOME') }}/bin"
+
+    - name: Configure miktex to automatically install missing packages
+      ansible.builtin.shell:
+        cmd: "/opt/miktex/bin/initexmf --set-config-value '[MPM]AutoInstall=1'"
 
     - name: Install Spacevim
       ansible.builtin.shell:
@@ -411,6 +418,9 @@
         path: "{{ lookup('env', 'HOME') }}/.zshrc"
       register: zshrc_file
 
+    - debug: msg="link exists"
+      when: zshrc_file.stat.islnk is defined and zshrc_file.stat.islnk
+
     - name: Remove old and wrong dotfiles
       ansible.builtin.file:
         path:
@@ -421,7 +431,7 @@
 
     - name: Clone personal dotfiles
       ansible.builtin.shell:
-        cmd: git clone git@github.com/MyonNeutrino/dev-dotfiles.git ~/.dotfiles
+        cmd: git clone https://github.com/MyonNeutrino/dev-dotfiles.git ~/.dotfiles
         creates: "{{ lookup('env', 'HOME') }}/.dotfiles"
 
     - name: provision dotfiles with gnu stow
@@ -430,19 +440,9 @@
         cmd: 'stow */'
         creates: "{{ lookup('env', 'HOME') }}/.zshrc"
 
-    - name: Get leftwm Coffee theme
-      ansible.builtin.shell:
-        cmd: "git clone https://github.com/lex148/leftwm-coffee.git {{ lookup('env', 'HOME') }}/.config/leftwm/themes/leftwm-coffee"
-        creates: "{{ lookup('env', 'HOME') }}/.config/leftwm/themes/leftwm-coffee"
-
     - name: Links leftwm Coffee theme as current
       ansible.builtin.file:
-        src: "{{ lookup('env', 'HOME') }}/.config/leftwm/themes/leftwm-coffee"
+        src: "{{ lookup('env', 'HOME') }}/.dotfiles/leftwm/.config/leftwm/themes/leftwm-chrifl"
         dest: "{{ lookup('env', 'HOME') }}/.config/leftwm/themes/current"
         state: link
-
-    - name: Get docker proxy stack
-      ansible.builtin.shell:
-        cmd: "git clone https://github.com/Sengorius/docker-proxy-stack ~/Dokumente/docker-proxy-stack"
-        creates: "{{ lookup('env', 'HOME') }}/Dokumente/docker-proxy-stack"
 
